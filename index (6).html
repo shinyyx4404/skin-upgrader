@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Skin Upgrader</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--line:#262a33;--tx:#e8eaf0;--mut:#8a90a0;--ac:#ffd21f;--ok:#7ddc3c;--bad:#ff4d4d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,Roboto,sans-serif}
+body{max-width:480px;margin:0 auto;padding:12px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.logo{font-weight:800;letter-spacing:1px;color:var(--ac)}
+.bal{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-weight:700}
+.arena{display:grid;grid-template-columns:1fr 150px 1fr;gap:6px;align-items:center}
+.slot{background:var(--card);border:1px solid var(--line);border-radius:12px;min-height:110px;padding:8px;text-align:center;display:flex;flex-direction:column;justify-content:center;font-size:12px;color:var(--mut)}
+.slot b{display:block;color:var(--tx);font-size:13px}
+.slot .pr{color:var(--ac);font-weight:700;margin-top:4px}
+.ring{position:relative;width:150px;height:150px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ptr{position:absolute;inset:0;transition:transform 3.4s cubic-bezier(.12,.7,.1,1)}
+.ptr i{position:absolute;left:50%;top:-2px;width:4px;height:16px;margin-left:-2px;background:#fff;border-radius:2px}
+.pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:var(--ok)}
+.pct small{font-size:11px;color:var(--mut);font-weight:400}
+.go{width:100%;margin:12px 0;padding:14px;border:0;border-radius:12px;background:var(--ac);color:#000;font-size:16px;font-weight:800}
+.go:disabled{opacity:.4}
+.msg{min-height:22px;text-align:center;font-weight:700}
+.tabs{display:flex;gap:6px;margin:6px 0}
+.tabs button{flex:1;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--mut);font-weight:700}
+.tabs button.on{color:#000;background:var(--ac);border-color:var(--ac)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sk{background:var(--card);border:1px solid var(--line);border-bottom:3px solid var(--c);border-radius:10px;padding:8px 6px;text-align:center;font-size:11px;color:var(--mut);min-height:84px;position:relative}
+.sk b{display:block;color:var(--tx);font-size:12px;margin:2px 0}
+.sk .pr{color:var(--ac);font-weight:700}
+.sk .ic{font-size:22px;height:44px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 6px var(--c))}
+.ic img{max-width:100%;max-height:44px;object-fit:contain}
+.slot img{max-height:56px;max-width:100%;margin:0 auto 4px;object-fit:contain}
+.sk.sel{outline:2px solid var(--ac);background:#221f10}
+.row{display:flex;gap:6px;margin:8px 0}
+.row button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-weight:700}
+.row button:disabled{opacity:.35}
+.empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:24px}
+.foot{margin-top:16px;text-align:center;font-size:11px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="top"><div class="logo">▲ UPGRADER</div><div class="bal">🪙 <span id="bal">0</span></div></div>
+
+<div class="arena">
+  <div class="slot" id="from">Выбери свои скины</div>
+  <div class="ring">
+    <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#2a2e38" stroke-width="9"/><circle id="arc" cx="50" cy="50" r="42" fill="none" stroke="#7ddc3c" stroke-width="9" stroke-dasharray="0 264" /></svg>
+    <div class="ptr" id="ptr"><i></i></div>
+    <div class="pct"><span id="pct">0%</span><small>шанс</small></div>
+  </div>
+  <div class="slot" id="to">Выбери цель</div>
+</div>
+
+<button class="go" id="go" disabled>Улучшить</button>
+<div class="msg" id="msg"></div>
+
+<div class="tabs"><button id="t1" class="on">Мои скины</button><button id="t2">Цель (каталог)</button></div>
+<div class="grid" id="list"></div>
+<div class="row"><button id="sell" disabled>Продать выбранные</button><button id="buy" disabled>Купить цель</button></div>
+<div class="row"><button id="bonus">+200 бесплатных монет</button><button id="reset">Сбросить игру</button></div>
+<div class="foot">Виртуальная игра. Монеты ненастоящие, вывода и пополнения нет. Цены скинов примерные.</div>
+
+<script>
+const R={gray:'#9aa3b2',lb:'#5b9bff',bl:'#4b69ff',pu:'#8847ff',pk:'#d32ce6',rd:'#eb4b4b',gd:'#e4ae39'};
+const CAT=[
+['P250 | Sand Dune',0.1,'gray','🔫'],['Nova | Walnut',0.3,'gray','🔫'],['MP9 | Rose Iron',0.8,'lb','🔫'],
+['AK-47 | Slate',4,'bl','🔫'],['Glock-18 | Water Elemental',6,'bl','🔫'],['USP-S | Cortex',9,'bl','🔫'],
+['AWP | Atheris',12,'pu','🎯'],['M4A4 | Desert-Strike',18,'pu','🔫'],['AK-47 | Redline',35,'pu','🔫'],
+['M4A1-S | Cyrex',45,'pk','🔫'],['Desert Eagle | Blaze',70,'pk','🔫'],['AWP | Asiimov',90,'rd','🎯'],
+['AK-47 | Vulcan',130,'rd','🔫'],['AK-47 | Fire Serpent',600,'rd','🔫'],['★ Karambit | Doppler',700,'gd','🗡️'],
+['★ Butterfly Knife | Fade',1500,'gd','🦋'],['★ Sport Gloves | Pandora\'s Box',1800,'gd','🧤'],['AWP | Dragon Lore',2000,'rd','🎯']
+].map((s,i)=>({id:i,n:s[0],p:s[1],c:R[s[2]],e:s[3]}));
+const KEY='skin-upgrader-v1';
+let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!Array.isArray(S.inv))S={bal:200,inv:[2,3,5],uid:10};
+if(typeof S.uid!=='number')S.uid=100;
+// inv: array of catalog ids (duplicates allowed); selection by index
+let tab=1,sel=new Set(),target=null,busy=false,spins=0;
+const $=id=>document.getElementById(id);
+const fmt=n=>n>=100?Math.round(n).toLocaleString('ru'):n.toFixed(2).replace(/\.?0+$/,'');
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const sumSel=()=>[...sel].reduce((a,i)=>a+CAT[S.inv[i]].p,0);
+const chance=()=>{if(target===null||!sel.size)return 0;const c=sumSel()/CAT[target].p*100;return c>=95?95:Math.max(c,0)};
+let IMG={};try{IMG=JSON.parse(localStorage.getItem('skin-img-v1'))||{}}catch(e){}
+const esc=t=>t.replace(/[\u0026<>\"]/g,'');
+const pic=s=>IMG[s.id]?`<img src="${esc(IMG[s.id])}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('${s.e}'))">`:s.e;
+const card=(s,on,i)=>`<div class="sk ${on?'sel':''}" style="--c:${s.c}" data-i="${i}"><div class="ic">${pic(s)}</div><b>${s.n}</b><span class="pr">🪙 ${fmt(s.p)}</span></div>`;
+function render(){
+  $('bal').textContent=fmt(S.bal);
+  const ch=chance(),valid=target!==null&&sel.size&&sumSel()<CAT[target].p;
+  $('from').innerHTML=sel.size?`${IMG[CAT[S.inv[[...sel][0]]].id]?`<img src="${esc(IMG[CAT[S.inv[[...sel][0]]].id])}" alt="">`:''}<b>${sel.size} скин(ов)</b><span class="pr">🪙 ${fmt(sumSel())}</span>`:'Выбери свои скины';
+  $('to').innerHTML=target!==null?`${IMG[target]?`<img src="${esc(IMG[target])}" alt="">`:''}<b>${CAT[target].n}</b><span class="pr">🪙 ${fmt(CAT[target].p)}</span>`:'Выбери цель';
+  const shown=valid?ch:0;
+  $('pct').textContent=(shown?shown.toFixed(2):'0')+'%';
+  $('arc').setAttribute('stroke-dasharray',`${264*shown/100} 264`);
+  $('go').disabled=!valid||busy;
+  $('sell').disabled=!sel.size||busy;
+  $('buy').disabled=target===null||S.bal<CAT[target].p||busy;
+  $('t1').className=tab==1?'on':'';$('t2').className=tab==2?'on':'';
+  if(tab==1)$('list').innerHTML=S.inv.length?S.inv.map((id,i)=>card(CAT[id],sel.has(i),i)).join(''):'<div class="empty">Пусто. Купи что-нибудь из каталога или возьми бонус 🙂</div>';
+  else $('list').innerHTML=CAT.map(s=>card(s,target===s.id,s.id)).join('');
+}
+$('list').onclick=e=>{
+  if(busy)return;const el=e.target.closest('.sk');if(!el)return;const i=+el.dataset.i;
+  if(tab==1){sel.has(i)?sel.delete(i):sel.add(i)}else{target=target===i?null:i}
+  $('msg').textContent='';render();
+};
+$('t1').onclick=()=>{tab=1;render()};$('t2').onclick=()=>{tab=2;render()};
+$('sell').onclick=()=>{S.bal+=sumSel();S.inv=S.inv.filter((_,i)=>!sel.has(i));sel.clear();save();render()};
+$('buy').onclick=()=>{S.bal-=CAT[target].p;S.inv.push(target);save();render()};
+$('bonus').onclick=()=>{S.bal+=200;save();render()};
+$('reset').onclick=()=>{if(confirm('Сбросить всё?')){S={bal:200,inv:[2,3,5],uid:10};sel.clear();target=null;$('msg').textContent='';save();render()}};
+$('go').onclick=()=>{
+  const ch=chance(),roll=Math.random()*100,win=roll<ch;
+  busy=true;$('msg').textContent='';render();
+  spins++;const p=$('ptr');
+  p.style.transform=`rotate(${360*(3+spins*3)+roll*3.6}deg)`;
+  setTimeout(()=>{
+    const gone=sel;S.inv=S.inv.filter((_,i)=>!gone.has(i));
+    if(win)S.inv.push(target);
+    $('msg').style.color=win?'var(--ok)':'var(--bad)';
+    $('msg').textContent=win?`Победа! ${CAT[target].n} твой`:'Не повезло. Скины сгорели';
+    sel.clear();if(win)target=null;busy=false;save();render();
+  },3500);
+};
+const norm=n=>String(n).toLowerCase().replace(/\s*\([^)]*\)\s*$/,'').replace(/^★\s*/,'').replace(/[’`]/g,"'").trim();
+async function loadImages(){
+  if(CAT.every(c=>IMG[c.id]))return;
+  const urls=['https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json','https://cdn.jsdelivr.net/gh/ByMykel/CSGO-API@main/public/api/en/skins.json'];
+  for(const u of urls){
+    try{
+      const arr=await (await fetch(u)).json();
+      const m={};
+      for(const k of arr){
+        const nm=String(k.name||'');
+        if(!k.image||/stattrak|souvenir/i.test(nm))continue;
+        const key=norm(nm);if(!m[key])m[key]=k.image;
+      }
+      CAT.forEach(c=>{const v=m[norm(c.n)];if(v)IMG[c.id]=v});
+      try{localStorage.setItem('skin-img-v1',JSON.stringify(IMG))}catch(e){}
+      render();return;
+    }catch(e){}
+  }
+}
+render();loadImages();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
