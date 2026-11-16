@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d11">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Skin Upgrader</title>
+<style>
+:root{--bg:#0b0d11;--card:#161920;--line:#252934;--tx:#e8eaf0;--mut:#7d8494;--ac:#ffd21f;--ok:#7ddc3c;--bad:#ff4d4d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:radial-gradient(circle at 50% 0,#1a1d26 0,var(--bg) 60%) fixed;color:var(--tx);font:15px/1.4 system-ui,-apple-system,Roboto,sans-serif}
+body{max-width:480px;margin:0 auto;padding:12px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.logo{font-weight:900;letter-spacing:2px;color:var(--tx);font-size:17px}.logo span{color:var(--ac)}
+.bal{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-weight:800;color:var(--ac)}
+.arena{display:grid;grid-template-columns:1fr 156px 1fr;gap:6px;align-items:center}
+.slot{background:linear-gradient(180deg,#1a1d26,#12141a);border:1px solid var(--line);border-radius:14px;min-height:130px;padding:8px 4px;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:11px;color:var(--mut)}
+.slot b{display:block;color:var(--tx);font-size:12px}
+.slot .pr{color:var(--ac);font-weight:800;margin-top:3px;font-size:12px}
+.slot img{max-height:54px;max-width:100%;object-fit:contain;margin-bottom:4px}
+.slot .chev{font-size:38px;color:var(--ac);opacity:.5;line-height:1}
+.ring{position:relative;width:156px;height:156px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+#arc{filter:drop-shadow(0 0 4px currentColor);transition:stroke-dasharray .4s}
+.ptr{position:absolute;inset:0;transition:transform 3.6s cubic-bezier(.12,.7,.1,1)}
+.ptr i{position:absolute;left:50%;top:-4px;width:0;height:0;margin-left:-7px;border:7px solid transparent;border-top:12px solid #fff;filter:drop-shadow(0 0 3px #fff)}
+.pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:28px;font-weight:900}
+.pct small{font-size:10px;color:var(--mut);font-weight:500;text-transform:uppercase;letter-spacing:1px}
+.ring.win{animation:glow 1s 2}.ring.lose{animation:shake .4s 2}
+@keyframes glow{50%{filter:drop-shadow(0 0 18px var(--ok))}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:12px 0 0}
+.presets button{padding:8px 0;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--mut);font-weight:800;font-size:12px}
+.presets button:disabled{opacity:.35}.presets button:active{color:#000;background:var(--ac)}
+.go{width:100%;margin:10px 0 6px;padding:15px;border:0;border-radius:12px;background:linear-gradient(180deg,#ffe14d,#ffc800);color:#000;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:1px;box-shadow:0 4px 18px #ffd21f33}
+.go:disabled{opacity:.35;box-shadow:none}
+.msg{min-height:20px;text-align:center;font-weight:700;font-size:13px}
+.tabs{display:flex;gap:6px;margin:8px 0}
+.tabs button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--mut);font-weight:800}
+.tabs button.on{color:#000;background:var(--ac);border-color:var(--ac)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sk{background:linear-gradient(160deg,var(--card) 45%,var(--g));border:1px solid var(--line);border-bottom:3px solid var(--c);border-radius:10px;padding:6px 4px;text-align:center;font-size:11px;color:var(--mut);min-height:96px;position:relative}
+.sk b{display:block;color:var(--tx);font-size:11px;margin:2px 0;line-height:1.2}
+.sk .pr{color:var(--ac);font-weight:800}
+.sk .ch{display:block;color:var(--ok);font-size:10px;font-weight:700}
+.sk .ic{font-size:24px;height:46px;display:flex;align-items:center;justify-content:center}
+.ic img{max-width:100%;max-height:46px;object-fit:contain;filter:drop-shadow(0 2px 6px #000a)}
+.sk.sel{outline:2px solid var(--ac)}
+.row{display:flex;gap:6px;margin:8px 0}
+.row button{flex:1;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-weight:700}
+.row button:disabled{opacity:.35}
+.empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:24px}
+.foot{margin-top:14px;text-align:center;font-size:11px;color:var(--mut)}
+#ov{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;z-index:9;padding:20px}
+#ov.show{display:flex}
+.ovc{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;text-align:center;width:100%;max-width:300px}
+.ovc .big{font-size:60px;height:90px;display:flex;align-items:center;justify-content:center}
+.ovc .big img{max-height:90px;max-width:100%}
+.ovc h2{margin:6px 0 2px;font-size:20px}
+.ovc button{margin-top:14px;width:100%;padding:12px;border:0;border-radius:10px;background:var(--ac);font-weight:900}
+
+.hist{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--mut);margin:-4px 2px 10px}
+.hist i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:4px}.hist i.w{background:var(--ok)}.hist i.l{background:var(--bad)}
+.dep{display:flex;gap:5px;align-items:center;margin-top:8px;font-size:12px;color:var(--mut)}
+.dep span{white-space:nowrap}.dep button{flex:1;padding:7px 0;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ac);font-weight:800;font-size:12px}
+.dep button:disabled{opacity:.35}
+#q{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-size:14px;margin-bottom:6px}
+.chips{display:flex;gap:5px;margin-bottom:8px;overflow-x:auto}
+.chips button{flex:none;padding:7px 12px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--mut);font-weight:700;font-size:12px}
+.chips button.on{color:#000;background:var(--ac);border-color:var(--ac)}
+.more{grid-column:1/-1;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ac);font-weight:800}
+
+.nav{display:flex;gap:6px;margin-bottom:12px}
+.nav button{flex:1;padding:10px 0;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--mut);font-weight:800;font-size:13px}
+.nav button.on{color:#000;background:var(--ac);border-color:var(--ac)}
+.cwin{position:relative;overflow:hidden;height:118px;background:#12141a;border:1px solid var(--line);border-radius:14px;margin:6px 0 12px}
+.cwin:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1px;background:var(--ac);box-shadow:0 0 10px var(--ac);z-index:2}
+#ctr{display:flex;height:100%;will-change:transform}
+.ci{flex:none;width:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid var(--line);border-bottom:3px solid var(--c);background:linear-gradient(160deg,transparent 40%,var(--g));font-size:26px}
+.ci img{max-width:78px;max-height:56px;object-fit:contain}.ci small{font-size:10px;color:var(--ac);font-weight:700;margin-top:4px}
+.cinfo{text-align:center;color:var(--mut);font-size:12px;margin-bottom:6px}
+h3{margin:16px 0 8px;font-size:14px;color:var(--mut);text-transform:uppercase;letter-spacing:1px}
+.pf{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.av{width:60px;height:60px;border-radius:50%;background:#222733;border:2px solid var(--ac);display:flex;align-items:center;justify-content:center;font-size:32px;flex:none}
+.pf input{width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--tx);font-size:18px;font-weight:800;padding:2px 0;outline:0}
+.xp{height:7px;background:#222733;border-radius:4px;margin-top:8px;overflow:hidden}.xp i{display:block;height:100%;background:var(--ac)}
+.pf small{color:var(--mut);font-size:11px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sg div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:11px;color:var(--mut)}
+.sg b{display:block;font-size:16px;color:var(--tx);margin-top:2px}
+.lg{display:flex;justify-content:space-between;gap:8px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:8px;padding:8px 10px;margin-bottom:5px;font-size:12px}
+.lg.w{border-left-color:var(--ok)}.lg span{display:block;color:var(--mut);font-size:10px}.lg b{white-space:nowrap}.lg.w b{color:var(--ok)}.lg:not(.w) b{color:var(--bad)}
+</style>
+</head>
+<body>
+<div class="top"><div class="logo"><span>▲</span> UPGRADER</div><div class="bal" id="bal">0 ₽</div></div>
+<div class="nav" id="nav"><button data-p="U" class="on">Апгрейд</button><button data-p="C">Бесплатный кейс</button><button data-p="P">Профиль</button></div>
+<div id="pgU">
+<div class="hist"><span id="hs"></span><span id="hd"></span></div>
+
+<div class="arena">
+  <div class="slot" id="from"></div>
+  <div class="ring" id="ring">
+    <svg viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ddc3c"/><stop offset=".5" stop-color="#ffd21f"/><stop offset="1" stop-color="#ff4d4d"/></linearGradient></defs>
+    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g)" stroke-opacity=".25" stroke-width="8"/>
+    <circle id="arc" cx="50" cy="50" r="42" fill="none" stroke="#7ddc3c" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 264" style="color:#7ddc3c"/></svg>
+    <div class="ptr" id="ptr"><i></i></div>
+    <div class="pct"><span id="pct">0%</span><small>шанс</small></div>
+  </div>
+  <div class="slot" id="to"></div>
+</div>
+
+<div class="presets" id="presets">
+  <button data-m="1.5">x1.5</button><button data-m="2">x2</button><button data-m="5">x5</button><button data-m="10">x10</button>
+  <button data-c="75">75%</button><button data-c="50">50%</button><button data-c="30">30%</button><button data-c="10">10%</button>
+</div>
+<div class="dep" id="dep"><span>С баланса:</span><button data-d="100">+100</button><button data-d="1000">+1К</button><button data-d="10000">+10К</button><button data-d="all">Всё</button><button data-d="0">✕</button></div>
+<button class="go" id="go" disabled>Улучшить</button>
+<div class="msg" id="msg"></div>
+
+<div class="tabs"><button id="t1" class="on">Мои скины</button><button id="t2">Цель</button></div>
+<div id="ctl" style="display:none">
+  <input id="q" placeholder="Поиск: AK-47, Karambit, Fade…">
+  <div class="chips" id="chips"><button data-cat="" class="on">Все</button><button data-cat="Оружие">Оружие</button><button data-cat="Ножи">Ножи</button><button data-cat="Перчатки">Перчатки</button><button id="srt">Цена ↑</button></div>
+</div>
+<div class="grid" id="list"></div>
+<div class="row"><button id="sell" disabled>Продать выбранные</button><button id="all">Выбрать все</button></div>
+<div class="row"><button id="reset">Сбросить игру</button></div>
+<div class="foot">Виртуальная игра. Рубли ненастоящие, вывода и пополнения нет. Цены примерные.</div>
+
+</div>
+<div id="pgC" style="display:none">
+  <div class="cinfo">Нищие пестики до 500 ₽. Кейс можно открывать раз в час.</div>
+  <div class="cwin" id="cwin"><div id="ctr"></div></div>
+  <button class="go" id="copen">Открыть бесплатно</button>
+  <h3>Что внутри</h3><div class="grid" id="cin"></div>
+</div>
+<div id="pgP" style="display:none"></div>
+<div id="ov"><div class="ovc"><div class="big" id="ovp"></div><h2 id="ovt"></h2><div id="ovs" style="color:var(--mut)"></div><button id="ovb">Круто</button></div></div>
+
+<script>
+const R={g:'#9aa3b2',l:'#5b9bff',b:'#4b69ff',p:'#8847ff',k:'#d32ce6',r:'#eb4b4b',y:'#e4ae39'};
+const RATE=90;
+const RAW=`P250|Sand Dune|0.1|g
+Nova|Walnut|0.3|g
+MAC-10|Silver|0.15|g
+SG 553|Army Sheen|0.2|g
+Tec-9|Urban DDPAT|0.1|g
+Five-SeveN|Forest Night|0.1|g
+UMP-45|Carbon Fiber|0.2|g
+XM1014|Blue Spruce|0.1|g
+MP7|Army Recon|0.1|g
+Glock-18|Sand Dune|0.1|g
+P90|Ash Wood|0.15|g
+Negev|Army Sheen|0.2|g
+Sawed-Off|Forest DDPAT|0.2|g
+MP9|Rose Iron|0.8|l
+Galil AR|Cerberus|0.9|l
+FAMAS|Colony|0.4|l
+Dual Berettas|Stained|0.5|l
+CZ75-Auto|Tuxedo|0.6|l
+MAG-7|Counter Terrace|0.5|l
+R8 Revolver|Bone Mask|0.4|l
+SSG 08|Blue Spruce|0.6|l
+M249|Magma|0.8|l
+PP-Bizon|Night Riot|0.9|l
+MP5-SD|Phosphor|1|l
+AK-47|Safari Mesh|1.5|l
+M4A4|Magnesium|1.2|l
+USP-S|Overgrowth|1.5|l
+AK-47|Slate|4|b
+Glock-18|Water Elemental|6|b
+USP-S|Cortex|9|b
+Desert Eagle|Conspiracy|3|b
+P250|Muertos|2.5|b
+P250|Visions|3|b
+Five-SeveN|Monkey Business|4.5|b
+Tec-9|Isaac|3|b
+MP7|Nemesis|3.5|b
+UMP-45|Primal Saber|4|b
+SG 553|Cyrex|5|b
+SG 553|Pulse|5|b
+Galil AR|Chatterbox|7|b
+FAMAS|Roll Cage|3|b
+MAC-10|Neon Rider|8|b
+M4A1-S|Guardian|8|b
+P90|Asiimov|10|b
+Nova|Bloomstick|4|b
+MAG-7|Bulldozer|3|b
+XM1014|Tranquility|4|b
+Dual Berettas|Cobra Strike|4|b
+CZ75-Auto|Victoria|6|b
+SSG 08|Dragonfire|8|b
+SCAR-20|Cyrex|9|b
+G3SG1|Flux|7|b
+Negev|Loudmouth|4|b
+M249|Nebula Crusader|7|b
+Sawed-Off|The Kraken|6|b
+AUG|Chameleon|5|b
+AWP|Pit Viper|5|b
+AWP|Elite Build|10|p
+AWP|Atheris|12|p
+AWP|Corticera|8|p
+AWP|Man-o'-war|18|p
+AWP|Redline|20|p
+AWP|Graphite|150|p
+M4A4|Buzz Kill|15|p
+M4A4|Desert-Strike|18|p
+AK-47|Elite Build|10|p
+AK-47|Point Disarray|25|p
+AK-47|Neon Revolution|30|p
+AK-47|Redline|35|p
+AK-47|Case Hardened|60|p
+Glock-18|Vogue|6|p
+USP-S|Road Rash|5|p
+USP-S|Caiman|12|p
+Desert Eagle|Mecha Industries|7|p
+Desert Eagle|Hypnotic|15|p
+P250|Asiimov|8|p
+P250|Whiteout|4|p
+Five-SeveN|Angry Mob|5|p
+Five-SeveN|Case Hardened|25|p
+Tec-9|Fuel Injector|8|p
+Tec-9|Decimator|12|p
+P2000|Fire Elemental|10|p
+CZ75-Auto|Xiphos|6|p
+FAMAS|Mecha Industries|5|p
+AUG|Bengal Tiger|20|p
+UMP-45|Momentum|9|p
+MAC-10|Heat|6|p
+MP9|Hypnotic|6|p
+MP7|Bloodsport|9|p
+P90|Trigon|7|p
+P90|Shallow Grave|5|p
+PP-Bizon|Judgement of Anubis|5|p
+Nova|Hyper Beast|7|p
+Nova|Antique|8|p
+XM1014|Seasons|7|p
+MAG-7|Heat|4|p
+Sawed-Off|Wasteland Princess|3|p
+SSG 08|Death's Head|8|p
+SCAR-20|Bloodsport|9|p
+G3SG1|Chronos|3|p
+Negev|Power Loader|5|p
+R8 Revolver|Fade|40|p
+AWP|Neo-Noir|30|k
+AWP|Wildfire|55|k
+AWP|Lightning Strike|100|k
+M4A4|Neo-Noir|25|k
+M4A4|The Emperor|40|k
+M4A4|Asiimov|75|k
+M4A1-S|Decimator|20|k
+M4A1-S|Hyper Beast|40|k
+M4A1-S|Cyrex|45|k
+M4A1-S|Chantico's Fire|50|k
+M4A1-S|Golden Coil|80|k
+AK-47|Bloodsport|45|k
+AK-47|Asiimov|55|k
+USP-S|Orion|18|k
+USP-S|Neo-Noir|20|k
+USP-S|Printstream|55|k
+USP-S|Kill Confirmed|55|k
+Glock-18|Neo-Noir|14|k
+Glock-18|Gamma Doppler|60|k
+Glock-18|Fade|350|k
+Desert Eagle|Kumicho Dragon|20|k
+Desert Eagle|Golden Koi|35|k
+Desert Eagle|Printstream|65|k
+Desert Eagle|Blaze|70|k
+P250|See Ya Later|18|k
+Five-SeveN|Hyper Beast|7|k
+P2000|Ocean Foam|50|k
+MP7|Impire|13|k
+MP9|Hot Rod|20|k
+P90|Death by Kitty|30|k
+SSG 08|Blood in the Water|25|k
+AWP|Hyper Beast|60|r
+AWP|Containment Breach|85|r
+AWP|Asiimov|90|r
+AWP|Fade|800|r
+AWP|Desert Hydra|1500|r
+AWP|Dragon Lore|2000|r
+AWP|Medusa|3500|r
+AWP|Gungnir|8000|r
+AK-47|Vulcan|130|r
+AK-47|Fire Serpent|600|r
+AK-47|Hydroponic|700|r
+M4A4|Poseidon|450|r
+M4A4|Howl|2500|r
+M4A1-S|Printstream|130|r
+M4A1-S|Icarus Fell|230|r
+M4A1-S|Knight|1000|r
+Glock-18|Bullet Queen|60|r
+Desert Eagle|Code Red|50|r
+AUG|Akihabara Accept|40|r
+P90|Emerald Dragon|45|r
+★ Gut Knife|Doppler|150|y
+★ Navaja Knife|Fade|150|y
+★ Falchion Knife|Doppler|180|y
+★ Shadow Daggers|Fade|200|y
+★ Huntsman Knife|Slaughter|200|y
+★ Gut Knife|Fade|220|y
+★ Flip Knife|Tiger Tooth|230|y
+★ Flip Knife|Doppler|250|y
+★ Survival Knife|Fade|300|y
+★ Paracord Knife|Fade|300|y
+★ Bowie Knife|Slaughter|300|y
+★ Huntsman Knife|Fade|350|y
+★ Nomad Knife|Fade|350|y
+★ Bayonet|Doppler|400|y
+★ Stiletto Knife|Fade|400|y
+★ Ursus Knife|Fade|400|y
+★ Flip Knife|Fade|420|y
+★ Bayonet|Slaughter|450|y
+★ Classic Knife|Fade|500|y
+★ Skeleton Knife|Fade|600|y
+★ M9 Bayonet|Doppler|600|y
+★ Karambit|Doppler|700|y
+★ Talon Knife|Fade|700|y
+★ Karambit|Case Hardened|800|y
+★ Bayonet|Fade|900|y
+★ Butterfly Knife|Doppler|900|y
+★ Butterfly Knife|Tiger Tooth|900|y
+★ Karambit|Tiger Tooth|900|y
+★ Butterfly Knife|Slaughter|1000|y
+★ M9 Bayonet|Marble Fade|1000|y
+★ Karambit|Crimson Web|1000|y
+★ Karambit|Slaughter|1100|y
+★ M9 Bayonet|Fade|1100|y
+★ M9 Bayonet|Crimson Web|1200|y
+★ Butterfly Knife|Fade|1500|y
+★ Karambit|Marble Fade|1700|y
+★ Karambit|Fade|1800|y
+★ Karambit|Lore|2500|y
+★ Moto Gloves|Cool Mint|150|y
+★ Hydra Gloves|Case Hardened|450|y
+★ Hand Wraps|Cobalt Skulls|500|y
+★ Moto Gloves|Spearmint|600|y
+★ Driver Gloves|Crimson Weave|700|y
+★ Specialist Gloves|Crimson Kimono|800|y
+★ Driver Gloves|King Snake|1100|y
+★ Specialist Gloves|Fade|1300|y
+★ Sport Gloves|Vice|1500|y
+★ Sport Gloves|Pandora's Box|1800|y`;
+const CAT=RAW.split('\n').map((l,i)=>{const [w,s,p,c]=l.split('|'),gl=/Gloves|Wraps/.test(w),kn=w[0]==='★'&&!gl;
+  return{id:i,n:w+' | '+s,p:+p,c:R[c],e:gl?'🧤':kn?'🗡️':/AWP|SSG|SCAR|G3SG1/.test(w)?'🎯':'🔫',w:gl?'Перчатки':kn?'Ножи':'Оружие'}});
+const idx=n=>CAT.findIndex(c=>c.n===n);
+const KEY='skin-upgrader-v3',fresh=()=>({bal:10,inv:[idx('MP9 | Rose Iron'),idx('AK-47 | Slate'),idx('USP-S | Cortex')],w:0,l:0,h:[]});
+let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!Array.isArray(S.inv))S=fresh();
+const AV=['🦊','🐺','🦅','🐉','💀','👾','🎯','🔥'],CD=3600000;
+function ensure(){if(!Array.isArray(S.h))S.h=[];S.w=S.w||0;S.l=S.l||0;S.st=S.st||{up:S.w+S.l,wag:0,won:0,best:null,luck:0,luckId:null,cases:0};
+S.log=S.log||[];S.nick=S.nick||'Игрок'+(1000+Math.floor(Math.random()*9000));S.av=S.av||0;S.free=S.free||0}
+ensure();let page='U';
+let tab=1,sel=new Set(),target=null,busy=false,spins=0,dep=0,q='',cat='',asc=true,lim=40;
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n*RATE).toLocaleString('ru-RU')+' ₽';
+const save=()=>{S.inv.sort((a,b)=>CAT[b].p-CAT[a].p);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const sumSel=()=>[...sel].reduce((a,i)=>a+CAT[S.inv[i]].p,0);
+const bet=()=>sumSel()+dep;
+const chanceFor=t=>{const b=bet();if(t===null||!b||b>=CAT[t].p)return 0;return Math.min(95,b/CAT[t].p*100)};
+const pc=c=>c<10?c.toFixed(2):c.toFixed(1);
+let IMG={};try{IMG=JSON.parse(localStorage.getItem('skin-img-v2'))||{}}catch(e){}
+const esc=t=>String(t).replace(/["<>&]/g,'');
+const pic=s=>IMG[s.id]?`<img src="${esc(IMG[s.id])}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('${s.e}'))">`:s.e;
+const timg=id=>IMG[id]?`<img src="${esc(IMG[id])}" alt="">`:'';
+const card=(s,on,i,extra)=>`<div class="sk ${on?'sel':''}" style="--c:${s.c};--g:${s.c}33" data-i="${i}"><div class="ic">${pic(s)}</div><b>${s.n}</b><span class="pr">${fmt(s.p)}</span>${extra||''}</div>`;
+const col=c=>c>=50?'#7ddc3c':c>=25?'#ffd21f':'#ff4d4d';
+function render(){
+  ['U','C','P'].forEach(k=>$('pg'+k).style.display=page===k?'':'none');
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.p===page));
+  if(page==='C')renderCase();if(page==='P')renderProfile();
+  dep=Math.min(dep,S.bal);
+  $('bal').textContent=fmt(S.bal);
+  $('hs').textContent=`Побед ${S.w} · Поражений ${S.l}`;
+  $('hd').innerHTML=S.h.map(x=>`<i class="${x}"></i>`).join('');
+  const ch=chanceFor(target),b=bet();
+  const parts=[];if(sel.size)parts.push(`${sel.size} скин(ов)`);if(dep)parts.push(`+ ${fmt(dep)}`);
+  $('from').innerHTML=b?`${sel.size?timg(S.inv[[...sel][0]]):''}<b>${parts.join(' ')}</b><span class="pr">${fmt(b)}</span>`:'<span class="chev">»</span>Выбери скины или добавь баланс';
+  $('to').innerHTML=target!==null?`${timg(target)}<b>${CAT[target].n}</b><span class="pr">${fmt(CAT[target].p)}</span>`:'<span class="chev">?</span>Выбери цель';
+  $('pct').textContent=(ch?pc(ch):'0')+'%';
+  $('pct').style.color=ch?col(ch):'var(--mut)';
+  $('arc').setAttribute('stroke-dasharray',`${264*ch/100} 264`);
+  $('arc').style.color=$('arc').style.stroke=col(ch||100);
+  $('go').disabled=!ch||busy;
+  $('sell').disabled=!sel.size||busy;
+  document.querySelectorAll('#presets button').forEach(x=>x.disabled=!b||busy);
+  document.querySelectorAll('#dep button').forEach(x=>x.disabled=busy||!S.bal);
+  $('t1').className=tab==1?'on':'';$('t2').className=tab==2?'on':'';
+  $('ctl').style.display=tab==2?'block':'none';
+  $('all').style.display=tab==1?'':'none';
+  if(tab==1)$('list').innerHTML=S.inv.length?S.inv.map((id,i)=>card(CAT[id],sel.has(i),i)).join(''):'<div class="empty">Скинов нет. Добавь ставку с баланса или сбрось игру.</div>';
+  else{
+    const L=CAT.filter(s=>(!cat||s.w===cat)&&s.n.toLowerCase().includes(q)&&(!b||s.p>b)).sort((x,y)=>asc?x.p-y.p:y.p-x.p);
+    $('list').innerHTML=(L.length?L.slice(0,lim).map(s=>{const c=chanceFor(s.id);return card(s,target===s.id,s.id,c?`<span class="ch">${pc(c)}%</span>`:'')}).join(''):'<div class="empty">Ничего не найдено</div>')+(L.length>lim?`<button class="more">Показать ещё (${L.length-lim})</button>`:'');
+  }
+}
+$('list').onclick=e=>{
+  if(busy)return;
+  if(e.target.closest('.more')){lim+=40;render();return}
+  const el=e.target.closest('.sk');if(!el)return;const i=+el.dataset.i;
+  if(tab==1){sel.has(i)?sel.delete(i):sel.add(i)}else{target=target===i?null:i}
+  $('msg').textContent='';render();
+};
+$('presets').onclick=e=>{
+  const x=e.target.closest('button');if(!x||busy||!bet())return;
+  const sm=bet(),want=x.dataset.m?sm*x.dataset.m:sm/(x.dataset.c/100);
+  const cand=CAT.filter(c=>c.p>sm);
+  if(!cand.length){$('msg').style.color='var(--bad)';$('msg').textContent='Нет скинов дороже твоей ставки';return}
+  target=cand.reduce((a,c)=>Math.abs(Math.log(c.p/want))<Math.abs(Math.log(a.p/want))?c:a).id;
+  $('msg').textContent='';render();
+};
+$('dep').onclick=e=>{
+  const x=e.target.closest('button');if(!x||busy)return;const d=x.dataset.d;
+  dep=d==='0'?0:d==='all'?S.bal:Math.min(S.bal,dep+d/RATE);render();
+};
+$('t1').onclick=()=>{tab=1;render()};$('t2').onclick=()=>{tab=2;lim=40;render()};
+$('q').oninput=e=>{q=e.target.value.trim().toLowerCase();lim=40;render()};
+$('chips').onclick=e=>{
+  const x=e.target.closest('button');if(!x)return;
+  if(x.id==='srt'){asc=!asc;x.textContent=asc?'Цена ↑':'Цена ↓'}
+  else{cat=x.dataset.cat;document.querySelectorAll('#chips button[data-cat]').forEach(y=>y.classList.toggle('on',y===x))}
+  lim=40;render();
+};
+$('sell').onclick=()=>{S.bal+=sumSel();S.inv=S.inv.filter((_,i)=>!sel.has(i));sel.clear();save();render()};
+$('all').onclick=()=>{S.inv.forEach((_,i)=>sel.add(i));render()};
+$('reset').onclick=()=>{if(confirm('Сбросить всё?')){const nk=S.nick,av=S.av;S=fresh();ensure();S.nick=nk;S.av=av;sel.clear();target=null;dep=0;$('msg').textContent='';save();render()}};
+$('ovb').onclick=()=>$('ov').classList.remove('show');
+$('go').onclick=()=>{
+  const ch=chanceFor(target),roll=Math.random()*100,win=roll<ch,t=target,d=dep,bt=bet();
+  busy=true;$('msg').textContent='';render();
+  spins++;$('ptr').style.transform=`rotate(${360*(3+spins*3)+roll*3.6}deg)`;
+  setTimeout(()=>{
+    const gone=sel;S.inv=S.inv.filter((_,i)=>!gone.has(i));S.bal-=d;
+    if(win){S.inv.push(t);S.w++;S.st.won+=CAT[t].p;noteDrop(CAT[t]);if(!S.st.luck||ch<S.st.luck){S.st.luck=ch;S.st.luckId=t}}else S.l++;
+    S.st.up++;S.st.wag+=bt;S.log=[...S.log,{t,ch,w:win,b:bt}].slice(-15);
+    S.h=[...S.h,win?'w':'l'].slice(-12);
+    const rg=$('ring');rg.className='ring '+(win?'win':'lose');setTimeout(()=>rg.className='ring',2200);
+    $('ovp').innerHTML=win?pic(CAT[t]):'💥';
+    $('ovt').textContent=win?'Победа!':'Не повезло';
+    $('ovt').style.color=win?'var(--ok)':'var(--bad)';
+    $('ovs').textContent=win?`${CAT[t].n} · ${fmt(CAT[t].p)}`:'Ставка сгорела';
+    $('ov').classList.add('show');
+    sel.clear();dep=0;if(win)target=null;busy=false;save();render();
+  },3700);
+};
+const noteDrop=c=>{if(S.st.best==null||c.p>CAT[S.st.best].p)S.st.best=c.id};
+const pool=CAT.filter(c=>c.p*RATE<=500),wt=c=>1/(c.p+.5);
+const pick=()=>{let r=Math.random()*pool.reduce((a,c)=>a+wt(c),0);for(const c of pool){r-=wt(c);if(r<=0)return c}return pool[0]};
+let caseBusy=false;
+function updCase(){
+  const b=$('copen');if(!b)return;const left=CD-(Date.now()-S.free);
+  if(caseBusy){b.textContent='Открываем…';b.disabled=true}
+  else if(left>0){const m=Math.floor(left/60000),s=Math.floor(left%60000/1000);b.textContent=`Следующий кейс через ${m}:${String(s).padStart(2,'0')}`;b.disabled=true}
+  else{b.textContent='Открыть бесплатно';b.disabled=false}
+}
+setInterval(updCase,1000);
+function renderCase(){
+  const tot=pool.reduce((a,c)=>a+wt(c),0);
+  $('cin').innerHTML=[...pool].sort((x,y)=>y.p-x.p).map(c=>card(c,false,c.id,`<span class="ch">${(wt(c)/tot*100).toFixed(1)}%</span>`)).join('');
+  updCase();
+}
+$('copen').onclick=()=>{
+  if(caseBusy||Date.now()-S.free<CD)return;caseBusy=true;
+  const win=pick(),WI=34,W=88,tr=$('ctr');
+  tr.style.transition='none';tr.style.transform='translateX(0)';
+  tr.innerHTML=Array.from({length:40},(_,i)=>{const c=i===WI?win:pick();return`<div class="ci" style="--c:${c.c};--g:${c.c}33">${pic(c)}<small>${fmt(c.p)}</small></div>`}).join('');
+  const cw=$('cwin').clientWidth,jit=(Math.random()-.5)*W*.6;void tr.offsetWidth;
+  tr.style.transition='transform 5s cubic-bezier(.1,.6,.1,1)';
+  tr.style.transform=`translateX(${-(WI*W+W/2-cw/2+jit)}px)`;
+  S.free=Date.now();save();updCase();
+  setTimeout(()=>{
+    S.inv.push(win.id);S.st.cases++;noteDrop(win);save();caseBusy=false;
+    $('ovp').innerHTML=pic(win);$('ovt').textContent='Тебе выпало!';$('ovt').style.color='var(--ac)';
+    $('ovs').textContent=`${win.n} · ${fmt(win.p)}`;$('ov').classList.add('show');render();
+  },5200);
+};
+function renderProfile(){
+  const st=S.st,xp=st.up*10+st.cases*5,lv=1+Math.floor(xp/100),inv=S.inv.reduce((a,id)=>a+CAT[id].p,0),pr=st.won-st.wag;
+  const wr=st.up?Math.round(S.w/st.up*100):0;
+  const cell=(l,v,c)=>`<div>${l}<b${c?` style="color:${c}"`:''}>${v}</b></div>`;
+  $('pgP').innerHTML=`<div class="pf"><div class="av" id="av">${AV[S.av%AV.length]}</div><div style="flex:1"><input id="nick" maxlength="16" value="${esc(S.nick)}"><div class="xp"><i style="width:${xp%100}%"></i></div><small>Уровень ${lv} · ${xp%100}/100 опыта</small></div></div>
+  <h3>Статистика</h3><div class="sg">
+  ${cell('Апгрейдов',st.up)}${cell('Винрейт',wr+'%',col(wr))}${cell('Побед',S.w,'var(--ok)')}${cell('Поражений',S.l,'var(--bad)')}
+  ${cell('Поставлено всего',fmt(st.wag))}${cell('Выиграно скинами',fmt(st.won))}
+  ${cell('Профит',(pr>=0?'+':'−')+fmt(Math.abs(pr)),pr>=0?'var(--ok)':'var(--bad)')}${cell('Кейсов открыто',st.cases)}
+  ${cell('Стоимость инвентаря',fmt(inv))}${cell('Скинов в инвентаре',S.inv.length)}</div>
+  <h3>Лучший дроп</h3>${st.best!=null?`<div class="grid">${card(CAT[st.best],false,st.best)}</div>`:'<div class="empty">Пока ничего</div>'}
+  ${st.luckId!=null?`<div class="cinfo" style="margin-top:8px">Самая везучая победа: ${CAT[st.luckId].n} при шансе ${pc(st.luck)}%</div>`:''}
+  <h3>История апгрейдов</h3>${S.log.length?[...S.log].reverse().map(x=>`<div class="lg ${x.w?'w':''}"><div>${CAT[x.t].n}<span>шанс ${pc(x.ch)}% · ставка ${fmt(x.b)}</span></div><b>${x.w?'+'+fmt(CAT[x.t].p-x.b):'−'+fmt(x.b)}</b></div>`).join(''):'<div class="empty">Ещё нет апгрейдов</div>'}`;
+}
+$('pgP').onclick=e=>{if(e.target.closest('#av')){S.av=(S.av+1)%AV.length;save();renderProfile()}};
+$('pgP').oninput=e=>{if(e.target.id==='nick'){S.nick=e.target.value.slice(0,16);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(x){}}};
+$('nav').onclick=e=>{const x=e.target.closest('button');if(!x)return;page=x.dataset.p;render()};
+const norm=n=>String(n).toLowerCase().replace(/\s*\([^)]*\)\s*$/,'').replace(/^★\s*/,'').replace(/[’`]/g,"'").trim();
+async function loadImages(){
+  if(localStorage.getItem('skin-img-done')==='1'&&Object.keys(IMG).length)return;
+  const urls=['https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json','https://cdn.jsdelivr.net/gh/ByMykel/CSGO-API@main/public/api/en/skins.json'];
+  for(const u of urls){
+    try{
+      const arr=await (await fetch(u)).json(),m={};
+      for(const k of arr){
+        const nm=String(k.name||'');
+        if(!k.image||/stattrak|souvenir/i.test(nm))continue;
+        const key=norm(nm);if(!m[key])m[key]=k.image;
+      }
+      CAT.forEach(c=>{const v=m[norm(c.n)];if(v)IMG[c.id]=v});
+      try{localStorage.setItem('skin-img-v2',JSON.stringify(IMG));localStorage.setItem('skin-img-done','1')}catch(e){}
+      render();return;
+    }catch(e){}
+  }
+}
+render();loadImages();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
